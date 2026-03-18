@@ -13,7 +13,7 @@ object ApiClient {
         install(WebSockets)
     }
 
-    const val BASE_URL = "http://192.168.0.200:8080"
+    const val BASE_URL = "http://192.168.0.182:8080"
 
     //⚠️ IMPORTANTE
     //Reemplaza IP por la IP de tu PC en red local.

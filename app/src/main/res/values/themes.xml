@@ -13,5 +13,15 @@
         <!-- Customize your theme here. -->
     </style>
 
+    <style name="BottomNavigation">
+        <item name="android:background">@color/green</item>
+        <item name="itemIconTint">@color/white</item>
+        <item name="itemTextColor">@color/white</item>
+    </style>
+
+    <style name="CustomBottomNavIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">@color/cafePrincipal</item>
+    </style>
+
     <style name="Theme.TurnosAprobar" parent="Base.Theme.TurnosAprobar" />
 </resources>

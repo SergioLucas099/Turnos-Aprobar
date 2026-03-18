@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/firstFragment"
+        android:icon="@drawable/outline_approval_delegation_24"
+        android:title="En Espera"/>
+
+    <item
+        android:id="@+id/secondFragment"
+        android:icon="@drawable/outline_person_cancel_24"
+        android:title="Cancelados"/>
+</menu>
