@@ -38,6 +38,7 @@ class TurnosCanceladosFragment : Fragment() {
     private lateinit var adapterTurnos: TurnosAdapter
     private lateinit var adapterAtraccion: VerAtraccionAdapter
     private val listaTurnos = mutableListOf<Turnos>()
+    private val listaTurnosOriginal = mutableListOf<Turnos>()
     private val listaAtracciones = mutableListOf<Atraccion>()
     var nombreAtraccion = ""
 
@@ -76,14 +77,23 @@ class TurnosCanceladosFragment : Fragment() {
         RevListaTurnosCancelados = view.findViewById(R.id.RevListaTurnosCancelados)
 
         adapterTurnos = TurnosAdapter(
-            listaTurnos,
-            { turnosActualizados -> actualizarTurnos(turnosActualizados) }
+            mutableListOf(),
+            { turno -> actualizarTurnos(turno) }
         )
 
         RevListaTurnosCancelados.layoutManager =
             LinearLayoutManager(requireContext(), RecyclerView.HORIZONTAL, false)
 
         RevListaTurnosCancelados.adapter = adapterTurnos
+
+        BuscadorTurnoCancelados.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean = false
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                filtrarTurnos(newText ?: "")
+                return true
+            }
+        })
 
         // Cargar datos
         cargarAtracciones()
@@ -128,16 +138,16 @@ class TurnosCanceladosFragment : Fragment() {
                         .get("${ApiClient.BASE_URL}/turnos")
                         .body()
 
-                val listaFiltrada = if(nombreAtraccion.isEmpty()){
+                val listaFiltrada = if (nombreAtraccion.isEmpty()) {
                     lista
                 } else {
-                    lista.filter {
-                        it.nombreAtraccion == nombreAtraccion
-                    }
+                    lista.filter { it.nombreAtraccion == nombreAtraccion }
                 }
 
-                // SOLO CANCELADOS
                 val listaCancelados = listaFiltrada.filter { it.estado == "CANCELADO" }
+
+                listaTurnosOriginal.clear()
+                listaTurnosOriginal.addAll(listaCancelados)
 
                 adapterTurnos.actualizarLista(listaCancelados)
 
@@ -150,12 +160,30 @@ class TurnosCanceladosFragment : Fragment() {
         }
     }
 
+    private fun filtrarTurnos(texto: String) {
+
+        val textoLower = texto.lowercase()
+
+        if (textoLower.isEmpty()) {
+            adapterTurnos.actualizarLista(listaTurnosOriginal)
+            return
+        }
+
+        val filtrados = listaTurnosOriginal.filter {
+
+            it.numeroTurno.contains(textoLower, true) ||
+                    it.telefono.replace(" ", "").contains(textoLower)
+        }
+
+        adapterTurnos.actualizarLista(filtrados)
+    }
+
     private fun actualizarTurnos(turnos: Turnos){
         lifecycleScope.launch {
             try {
                 ApiClient.client.put("${ApiClient.BASE_URL}/turnos/${turnos._id}") {
                     contentType(io.ktor.http.ContentType.Application.Json)
-                    setBody(mapOf("estado" to turnos.estado))
+                    setBody(turnos)
                 }
                 cargarTurnos()
             } catch (e: Exception) {

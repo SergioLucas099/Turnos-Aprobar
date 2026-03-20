@@ -82,6 +82,7 @@ class TurnosAdapter (
         holder.TurnoAsignado.text = turno.numeroTurno
         holder.personasTurno.text = turno.numeroPersonas.toString()
         holder.nombreAtraccionSelect.text = turno.nombreAtraccion
+        holder.FinalizarTurno.visibility = View.GONE
 
         val estadoTurno = turno.estado
 

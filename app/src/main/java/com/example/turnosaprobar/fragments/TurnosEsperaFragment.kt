@@ -34,7 +34,6 @@ class TurnosEsperaFragment : Fragment() {
     private lateinit var RevListaTurnos: RecyclerView
     private lateinit var RevTurnosActuales: RecyclerView
     private lateinit var RevListaAtracciones: RecyclerView
-    private lateinit var adapterTurnos: TurnosAdapter
     private lateinit var adapterAtraccion: VerAtraccionAdapter
     private val listaTurnos = mutableListOf<Turnos>()
     private val listaAtracciones = mutableListOf<Atraccion>()
@@ -42,6 +41,7 @@ class TurnosEsperaFragment : Fragment() {
     private lateinit var AvisoSinTurnosActuales: LinearLayout
     private lateinit var adapterTurnosEspera: TurnosAdapter
     private lateinit var adapterTurnosAprobados: TurnosAdapter
+    private val listaTurnosOriginal = mutableListOf<Turnos>()
     var nombreAtraccion = ""
 
     override fun onCreateView(
@@ -147,13 +147,15 @@ class TurnosEsperaFragment : Fragment() {
                         .get("${ApiClient.BASE_URL}/turnos")
                         .body()
 
-                val listaFiltrada = if(nombreAtraccion.isEmpty()){
+                val listaFiltrada = if (nombreAtraccion.isEmpty()) {
                     lista
                 } else {
-                    lista.filter {
-                        it.nombreAtraccion == nombreAtraccion
-                    }
+                    lista.filter { it.nombreAtraccion == nombreAtraccion }
                 }
+
+                // 🔥 GUARDAR LISTA ORIGINAL
+                listaTurnosOriginal.clear()
+                listaTurnosOriginal.addAll(listaFiltrada)
 
                 val listaEspera = listaFiltrada.filter { it.estado == "ESPERA" }
                 val listaAprobados = listaFiltrada.filter { it.estado == "APROBADO" }
@@ -192,18 +194,35 @@ class TurnosEsperaFragment : Fragment() {
     }
 
     private fun filtrarTurnos(texto: String) {
+
         val textoLower = texto.lowercase()
 
-        val listaFiltrada = listaTurnos.filter {
-            it.estado == "ESPERA" &&
-                    (
-                            it.numeroTurno.contains(textoLower, true) ||
-                                    it.telefono.contains(textoLower, true)
-                            ) &&
+        // 🔥 Si no hay texto → restaurar todo
+        if (textoLower.isEmpty()) {
+
+            val listaEspera = listaTurnosOriginal.filter { it.estado == "ESPERA" }
+            val listaAprobados = listaTurnosOriginal.filter { it.estado == "APROBADO" }
+
+            adapterTurnosEspera.actualizarLista(listaEspera)
+            adapterTurnosAprobados.actualizarLista(listaAprobados)
+
+            return
+        }
+
+        // 🔍 Filtrar sobre la lista original
+        val filtrados = listaTurnosOriginal.filter {
+
+            (it.numeroTurno.contains(textoLower, true) ||
+                    it.telefono.replace(" ", "").contains(textoLower)) &&
+
                     (nombreAtraccion.isEmpty() || it.nombreAtraccion == nombreAtraccion)
         }
 
-        adapterTurnosEspera.actualizarLista(listaFiltrada)
+        val listaEspera = filtrados.filter { it.estado == "ESPERA" }
+        val listaAprobados = filtrados.filter { it.estado == "APROBADO" }
+
+        adapterTurnosEspera.actualizarLista(listaEspera)
+        adapterTurnosAprobados.actualizarLista(listaAprobados)
     }
 
     private fun conectarWebSocket() {
