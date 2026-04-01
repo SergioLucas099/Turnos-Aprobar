@@ -13,5 +13,6 @@ data class Turnos (
     val tiempoEspera: Int = 0,
     val duracion: Int = 0,
     var estado: String,
+    var llamandoTurno: Boolean,
     val fecha: String
 )

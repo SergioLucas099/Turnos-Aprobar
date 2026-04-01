@@ -136,8 +136,9 @@
                     android:layout_width="50dp"
                     android:layout_height="50dp"
                     android:src="@drawable/cancelar_llamada"
-                    android:visibility="invisible"
-                    app:layout_anchor="@+id/LlamarTurno" />
+                    android:visibility="gone"
+                    app:layout_anchor="@+id/LlamarTurno"
+                    app:layout_anchorGravity="center" />
 
             </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
@@ -191,7 +192,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
                     android:src="@drawable/finalizando"
-                    android:visibility="invisible"
                     app:layout_anchor="@+id/AprobarTurno" />
 
             </androidx.coordinatorlayout.widget.CoordinatorLayout>

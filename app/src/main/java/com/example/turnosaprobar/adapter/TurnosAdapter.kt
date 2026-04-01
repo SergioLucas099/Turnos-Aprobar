@@ -19,10 +19,13 @@ import com.example.turnosaprobar.model.Turnos
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.toString
+import android.os.Handler
+import android.os.Looper
 
 class TurnosAdapter (
     private val lista: MutableList<Turnos>,
-    private val onEditar: (Turnos) -> Unit
+    private val onEditar: (Turnos) -> Unit,
+    private val onLlamar: (Turnos, Boolean) -> Unit
 ) : RecyclerView.Adapter<TurnosAdapter.TurnosAdapterViewHolder>() {
 
     inner class TurnosAdapterViewHolder(itemView: View) :
@@ -154,10 +157,20 @@ class TurnosAdapter (
         }
 
         holder.LlamarTurno.setOnClickListener {
+
             Toast.makeText(
                 holder.itemView.context,
                 "Llamando Turno...",
-                Toast.LENGTH_SHORT).show()
+                Toast.LENGTH_SHORT
+            ).show()
+
+            onLlamar(turno, true)
+
+            Handler(Looper.getMainLooper()).postDelayed({
+
+                onLlamar(turno, false)
+
+            }, 6000)
         }
 
         holder.AceptarTurno.setOnClickListener {
@@ -208,6 +221,9 @@ class TurnosAdapter (
                 }
                 .setNegativeButton("Cancelar", null)
                 .show()
+
+            holder.AprobarTurno.visibility = View.VISIBLE
+            holder.FinalizarTurno.visibility = View.GONE
         }
 
         holder.DevolverTurno.setOnClickListener {
@@ -291,4 +307,6 @@ class TurnosAdapter (
 
         }.start()
     }
+
+
 }

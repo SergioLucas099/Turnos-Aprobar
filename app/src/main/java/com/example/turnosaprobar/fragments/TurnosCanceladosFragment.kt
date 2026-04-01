@@ -78,7 +78,8 @@ class TurnosCanceladosFragment : Fragment() {
 
         adapterTurnos = TurnosAdapter(
             mutableListOf(),
-            { turno -> actualizarTurnos(turno) }
+            { turno -> actualizarTurnos(turno) },
+            { turno, estado -> llamarTurno(turno, estado) }
         )
 
         RevListaTurnosCancelados.layoutManager =
@@ -192,6 +193,24 @@ class TurnosCanceladosFragment : Fragment() {
         }
     }
 
+    private fun llamarTurno(turno: Turnos, estado: Boolean){
+        lifecycleScope.launch {
+            try {
+
+                val response = ApiClient.client.put("${ApiClient.BASE_URL}/turnos/${turno._id}/llamar") {
+                    contentType(io.ktor.http.ContentType.Application.Json)
+                    setBody(mapOf("llamandoTurno" to estado))
+                }
+
+                Log.d("LLAMAR_TURNO", "Enviado: $estado")
+                Log.d("LLAMAR_TURNO", "Respuesta: $response")
+
+            } catch (e: Exception) {
+                Log.e("ERROR_LLAMAR", e.message ?: "Error desconocido")
+            }
+        }
+    }
+
     private fun conectarWebSocket() {
 
         lifecycleScope.launch {
@@ -200,7 +219,7 @@ class TurnosCanceladosFragment : Fragment() {
 
                 ApiClient.client.webSocket(
                     method = io.ktor.http.HttpMethod.Get,
-                    host = "192.168.0.182",
+                    host = "192.168.2.109",
                     port = 8080,
                     path = "/ws/turnos"
                 ) {

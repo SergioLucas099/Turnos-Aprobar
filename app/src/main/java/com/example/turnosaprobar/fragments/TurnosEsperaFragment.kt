@@ -79,12 +79,14 @@ class TurnosEsperaFragment : Fragment() {
 
         adapterTurnosEspera = TurnosAdapter(
             mutableListOf(),
-            { turno -> actualizarTurnos(turno) }
+            { turno -> actualizarTurnos(turno) },
+            { turno, estado -> llamarTurno(turno, estado) }
         )
 
         adapterTurnosAprobados = TurnosAdapter(
             mutableListOf(),
-            { turno -> actualizarTurnos(turno) }
+            { turno -> actualizarTurnos(turno) },
+            { turno, estado -> llamarTurno(turno, estado) }
         )
 
         RevListaTurnos.layoutManager =
@@ -193,6 +195,30 @@ class TurnosEsperaFragment : Fragment() {
         }
     }
 
+    private fun llamarTurno(turno: Turnos, estado: Boolean){
+        lifecycleScope.launch {
+            try {
+
+                val url = "${ApiClient.BASE_URL}/turnos/${turno._id}/llamar"
+
+                Log.d("LLAMAR_TURNO", "URL: $url")
+                Log.d("LLAMAR_TURNO", "ID: ${turno._id}")
+                Log.d("LLAMAR_TURNO", "Estado enviado: $estado")
+
+                val response = ApiClient.client.put(url) {
+                    contentType(io.ktor.http.ContentType.Application.Json)
+                    setBody(mapOf("llamandoTurno" to estado))
+                }
+
+                Log.d("LLAMAR_TURNO", "REQUEST ENVIADO")
+                Log.d("LLAMAR_TURNO", "Respuesta RAW: $response")
+
+            } catch (e: Exception) {
+                Log.e("ERROR_LLAMAR", "ERROR COMPLETO", e)
+            }
+        }
+    }
+
     private fun filtrarTurnos(texto: String) {
 
         val textoLower = texto.lowercase()
@@ -233,7 +259,7 @@ class TurnosEsperaFragment : Fragment() {
 
                 ApiClient.client.webSocket(
                     method = io.ktor.http.HttpMethod.Get,
-                    host = "192.168.0.182",
+                    host = "192.168.2.109",
                     port = 8080,
                     path = "/ws/turnos"
                 ) {
