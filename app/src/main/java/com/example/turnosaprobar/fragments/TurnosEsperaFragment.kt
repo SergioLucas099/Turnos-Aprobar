@@ -26,6 +26,7 @@ import io.ktor.http.contentType
 import io.ktor.websocket.Frame
 import io.ktor.websocket.readText
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -112,6 +113,8 @@ class TurnosEsperaFragment : Fragment() {
         cargarTurnos()
 
         conectarWebSocket()
+
+        conectarWebSocketTurnos()
     }
 
     private fun cargarAtracciones() {
@@ -256,32 +259,66 @@ class TurnosEsperaFragment : Fragment() {
         lifecycleScope.launch {
 
             try {
-
                 ApiClient.client.webSocket(
                     method = io.ktor.http.HttpMethod.Get,
-                    host = "192.168.2.109",
+                    host = "192.168.2.116",
                     port = 8080,
-                    path = "/ws/turnos"
+                    path = "/ws/atracciones"
                 ) {
-
+                    //WebSocket conectado a atracciones
                     for (frame in incoming) {
-
                         if (frame is Frame.Text) {
 
                             val mensaje = frame.readText()
-                            Log.d("WEBSOCKET", "Mensaje recibido: $mensaje")
 
-                            if (mensaje == "TURNOS_UPDATED") {
+                            if (mensaje == "ATRACCIONES_UPDATED") {
 
                                 withContext(Dispatchers.Main) {
-                                    cargarTurnos()
+                                    cargarAtracciones()
                                 }
                             }
                         }
                     }
                 }
+
             } catch (e: Exception) {
+                println("❌ Error WebSocket: ${e.message}")
                 e.printStackTrace()
+            }
+        }
+    }
+
+    private fun conectarWebSocketTurnos() {
+        lifecycleScope.launch {
+            while (true) {
+                try {
+                    ApiClient.client.webSocket(
+                        method = io.ktor.http.HttpMethod.Get,
+                        host = "192.168.2.116",
+                        port = 8080,
+                        path = "/ws/turnos"
+                    ) {
+                        Log.d("WS", "✅ Conectado a turnos")
+
+                        for (frame in incoming) {
+                            if (frame is Frame.Text) {
+
+                                val mensaje = frame.readText()
+                                Log.d("WS_TURNOS", "Mensaje: $mensaje")
+
+                                if (mensaje == "TURNOS_UPDATED") {
+                                    withContext(Dispatchers.Main) {
+                                        cargarTurnos()
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                } catch (e: Exception) {
+                    Log.e("WS_ERROR", "Reconectando en 3s: ${e.message}")
+                    delay(3000)
+                }
             }
         }
     }

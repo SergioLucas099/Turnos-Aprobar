@@ -3,7 +3,6 @@ package com.example.turnosaprobar.model
 import kotlinx.serialization.Serializable
 
 @Serializable
-
 data class Atraccion(
     val _id: String? = null,
     val nombre: String,
