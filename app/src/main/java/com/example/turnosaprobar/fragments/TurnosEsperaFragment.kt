@@ -120,8 +120,9 @@ class TurnosEsperaFragment : Fragment() {
     private fun cargarAtracciones() {
         lifecycleScope.launch {
             try {
+                val baseUrl = ApiClient.getBaseUrl(requireContext())
                 val lista: List<Atraccion> =
-                    ApiClient.client.get("${ApiClient.BASE_URL}/atracciones")
+                    ApiClient.client.get("${baseUrl}/atracciones")
                         .body()
                 adapterAtraccion.actualizarLista(lista)
 
@@ -134,8 +135,9 @@ class TurnosEsperaFragment : Fragment() {
     private fun actualizarAtracciones(atraccion: Atraccion) {
         lifecycleScope.launch {
             try {
+                val baseUrl = ApiClient.getBaseUrl(requireContext())
                 val lista: List<Atraccion> =
-                    ApiClient.client.get("${ApiClient.BASE_URL}/atracciones")
+                    ApiClient.client.get("${baseUrl}/atracciones")
                         .body()
                 adapterAtraccion.actualizarLista(lista)
             } catch (e: Exception) {
@@ -147,9 +149,10 @@ class TurnosEsperaFragment : Fragment() {
     private fun cargarTurnos() {
         lifecycleScope.launch {
             try {
+                val baseUrl = ApiClient.getBaseUrl(requireContext())
                 val lista: List<Turnos> =
                     ApiClient.client
-                        .get("${ApiClient.BASE_URL}/turnos")
+                        .get("${baseUrl}/turnos")
                         .body()
 
                 val listaFiltrada = if (nombreAtraccion.isEmpty()) {
@@ -183,7 +186,8 @@ class TurnosEsperaFragment : Fragment() {
     private fun actualizarTurnos(turnos: Turnos){
         lifecycleScope.launch {
             try {
-                val response = ApiClient.client.put("${ApiClient.BASE_URL}/turnos/${turnos._id}") {
+                val baseUrl = ApiClient.getBaseUrl(requireContext())
+                val response = ApiClient.client.put("${baseUrl}/turnos/${turnos._id}") {
                     contentType(io.ktor.http.ContentType.Application.Json)
                     setBody(mapOf("estado" to turnos.estado))
                 }
@@ -201,8 +205,8 @@ class TurnosEsperaFragment : Fragment() {
     private fun llamarTurno(turno: Turnos, estado: Boolean){
         lifecycleScope.launch {
             try {
-
-                val url = "${ApiClient.BASE_URL}/turnos/${turno._id}/llamar"
+                val baseUrl = ApiClient.getBaseUrl(requireContext())
+                val url = "${baseUrl}/turnos/${turno._id}/llamar"
 
                 Log.d("LLAMAR_TURNO", "URL: $url")
                 Log.d("LLAMAR_TURNO", "ID: ${turno._id}")
@@ -259,20 +263,25 @@ class TurnosEsperaFragment : Fragment() {
         lifecycleScope.launch {
 
             try {
+                val baseUrl = ApiClient.getBaseUrl(requireContext())
+
+                val host = baseUrl
+                    .replace("http://", "")
+                    .replace(":8080", "")
+
                 ApiClient.client.webSocket(
                     method = io.ktor.http.HttpMethod.Get,
-                    host = "192.168.2.116",
+                    host = host,
                     port = 8080,
                     path = "/ws/atracciones"
                 ) {
-                    //WebSocket conectado a atracciones
+
                     for (frame in incoming) {
                         if (frame is Frame.Text) {
 
                             val mensaje = frame.readText()
 
                             if (mensaje == "ATRACCIONES_UPDATED") {
-
                                 withContext(Dispatchers.Main) {
                                     cargarAtracciones()
                                 }
@@ -282,7 +291,7 @@ class TurnosEsperaFragment : Fragment() {
                 }
 
             } catch (e: Exception) {
-                println("❌ Error WebSocket: ${e.message}")
+                println("Error WebSocket: ${e.message}")
                 e.printStackTrace()
             }
         }
@@ -290,35 +299,37 @@ class TurnosEsperaFragment : Fragment() {
 
     private fun conectarWebSocketTurnos() {
         lifecycleScope.launch {
-            while (true) {
-                try {
-                    ApiClient.client.webSocket(
-                        method = io.ktor.http.HttpMethod.Get,
-                        host = "192.168.2.116",
-                        port = 8080,
-                        path = "/ws/turnos"
-                    ) {
-                        Log.d("WS", "✅ Conectado a turnos")
 
-                        for (frame in incoming) {
-                            if (frame is Frame.Text) {
+            try {
+                val baseUrl = ApiClient.getBaseUrl(requireContext())
 
-                                val mensaje = frame.readText()
-                                Log.d("WS_TURNOS", "Mensaje: $mensaje")
+                val host = baseUrl
+                    .replace("http://", "")
+                    .replace(":8080", "")
 
-                                if (mensaje == "TURNOS_UPDATED") {
-                                    withContext(Dispatchers.Main) {
-                                        cargarTurnos()
-                                    }
+                ApiClient.client.webSocket(
+                    method = io.ktor.http.HttpMethod.Get,
+                    host = host,
+                    port = 8080,
+                    path = "/ws/turnos"
+                ) {
+
+                    for (frame in incoming) {
+                        if (frame is Frame.Text) {
+
+                            val mensaje = frame.readText()
+
+                            if (mensaje == "TURNOS_UPDATED") {
+                                withContext(Dispatchers.Main) {
+                                    cargarTurnos()
                                 }
                             }
                         }
                     }
-
-                } catch (e: Exception) {
-                    Log.e("WS_ERROR", "Reconectando en 3s: ${e.message}")
-                    delay(3000)
                 }
+
+            } catch (e: Exception) {
+                println("❌ Error WebSocket TURNOS: ${e.message}")
             }
         }
     }
